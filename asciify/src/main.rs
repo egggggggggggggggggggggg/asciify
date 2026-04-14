@@ -1,0 +1,31 @@
+#[derive(Default)]
+struct Config {
+    mode: Mode,
+}
+#[derive(Default)]
+enum Mode {
+    Dots,
+    #[default]
+    Regular,
+}
+
+fn main() -> Result<(), String> {
+    let mut args = std::env::args().skip(1);
+    let mut config = Config::default();
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--mode" => {
+                let value = next_arg(&mut args, "--mode")?;
+                config.mode = match value.as_str() {
+                    "dots" => Mode::Dots,
+                    _ => return Err(format!("Invalid mode: {}", value)),
+                }
+            }
+            _ => return Err(format!("Unexpected argument: {}", arg)),
+        }
+    }
+    Ok(())
+}
+fn next_arg(args: &mut impl Iterator<Item = String>, name: &str) -> Result<String, String> {
+    args.next().ok_or(format!("Expected value after {}", name))
+}
