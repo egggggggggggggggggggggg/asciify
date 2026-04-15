@@ -1,2 +1,2 @@
-const BLOCKS: &[char] = &['█', '▓', '▒', '░'];
-const ASCII: &[char] = &['a'];
+pub const BLOCKS: &[char] = &['█', '▓', '▒', '░'];
+pub const ASCII: &[char] = &['a'];

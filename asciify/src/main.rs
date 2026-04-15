@@ -1,6 +1,7 @@
+use core::TtfFont;
 use std::path::PathBuf;
 
-use asciify::{ColorSpace, Config, Mode};
+use asciify::{ColorSpace, Config, Mode, validate_font_path};
 fn main() -> Result<(), String> {
     let mut args = std::env::args().skip(1);
     let mut config = Config::default();
@@ -9,7 +10,7 @@ fn main() -> Result<(), String> {
             "--mode" | "-m" => {
                 let value = next_arg(&mut args, "--mode")?;
                 config.mode = match value.as_str() {
-                    "dots" => Mode::Dots,
+                    "blocks" => Mode::Blocks,
                     _ => return Err(format!("Invalid mode: {}", value)),
                 }
             }
@@ -22,10 +23,7 @@ fn main() -> Result<(), String> {
             }
             "--font" | "-f" => {
                 let value = next_arg(&mut args, "font")?;
-                let path = PathBuf::from(value);
-                if !path.exists() {
-                    return Err(format!("Invalid font file path: {}"));
-                }
+                validate_font_path(&value)?;
             }
             _ => return Err(format!("Unexpected argument: {}", arg)),
         }
@@ -34,4 +32,7 @@ fn main() -> Result<(), String> {
 }
 fn next_arg(args: &mut impl Iterator<Item = String>, name: &str) -> Result<String, String> {
     args.next().ok_or(format!("Expected value after {}", name))
+}
+pub fn load_font(path: PathBuf) -> TtfFont {
+    TtfFont::new(path.to_str().expect("Malformed path")).expect("Malformed font file")
 }
