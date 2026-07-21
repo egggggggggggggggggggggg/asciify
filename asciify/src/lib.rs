@@ -81,22 +81,17 @@ pub fn image_to_ascii(image: DynamicImage, config: Config) -> String {
 
     // Split densities + chars
     let (densities, chars): (Vec<f32>, Vec<char>) = density.into_iter().unzip();
-
     // Resize image (important: characters are taller than wide)
     let (width, height) = image.dimensions();
     let aspect_ratio = height as f32 / width as f32;
-
-    let new_width = 100; // configurable later
+    let new_width = 300; // configurable later
     let new_height = (new_width as f32 * aspect_ratio) as u32;
-
     let resized = image.resize(new_width, new_height, FilterType::CatmullRom);
     let grayscale = resized.to_luma8();
     let mut output = String::with_capacity((new_width * new_height) as usize);
-
     let max_density = densities[0];
     let min_density = densities[densities.len() - 1];
     let range = max_density - min_density;
-
     for (i, pixel) in grayscale.pixels().enumerate() {
         let brightness = pixel[0] as f32;
         let density_value = 255.0 - brightness;
@@ -109,10 +104,15 @@ pub fn image_to_ascii(image: DynamicImage, config: Config) -> String {
             output.push('\n');
         }
     }
-
     output
 }
-
+fn safe_char(c: char) -> String {
+    if c.is_alphanumeric() {
+        c.to_string()
+    } else {
+        format!("u{:04x}", c as u32) // unicode fallback
+    }
+}
 pub fn render_ascii() {}
 
 pub fn character_density(
@@ -120,6 +120,14 @@ pub fn character_density(
 ) -> Vec<(f32, char)> {
     let mut density_ascii: Vec<(f32, char)> = Vec::new();
     for (ch, image) in char_map {
+        let safe = safe_char(ch);
+        println!(
+            "image size: {} height * {} width for : {}",
+            image.height(),
+            image.width(),
+            ch
+        );
+        image.save(format!("letters/letter_{}.png", safe)).unwrap();
         let grayscale = DynamicImage::from(image).to_luma8();
         let mut total: u64 = 0;
         let mut count: u64 = 0;
